@@ -1,0 +1,15 @@
+# Tells git which files and folders to not track or upload to github
+
+# Python
+venv/
+__pycache__/
+*.pyc
+.env
+
+# Node
+node_modules/
+dist/
+
+# Databases / misc
+*.db
+.DS_Store
