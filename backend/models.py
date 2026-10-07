@@ -36,11 +36,25 @@ def remove_trade(id):
         if trade.id == id:
             trades.remove(trade)
             return "Trade removed successfully"
-    return 'Trade could not be found'
+    return None
 
-def all_trades(): 
+def update_trade(id, ticker, side, entry_price, exit_price, contracts, notes):
     for trade in trades:
-        print(trade.to_dict())
+        if trade.id == id:
+            trade.ticker = ticker
+            trade.side = side
+            trade.entry_price = entry_price
+            trade.exit_price = exit_price
+            trade.contracts = contracts
+            trade.notes = notes        
+            return trade
+    return None
+        
+def all_trades(): 
+    trades_list = []
+    for trade in trades:
+        trades_list.append(trade.to_dict())
+    return trades_list
 
 
         
