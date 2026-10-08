@@ -35,9 +35,10 @@ def remove_trade(id):
     for trade in trades:
         if trade.id == id:
             trades.remove(trade)
-            return "Trade removed successfully"
+            return trade
     return None
 
+# The user will provide information on what they want to update on an existing trade
 def update_trade(id, ticker, side, entry_price, exit_price, contracts, notes):
     for trade in trades:
         if trade.id == id:
@@ -49,7 +50,7 @@ def update_trade(id, ticker, side, entry_price, exit_price, contracts, notes):
             trade.notes = notes        
             return trade
     return None
-        
+# This will list out all trades that currently exist
 def all_trades(): 
     trades_list = []
     for trade in trades:
