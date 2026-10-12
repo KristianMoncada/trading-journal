@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-
+// Connects to flask api call for retrieving list of trades
 function TradeList() {
     const [tradeList, setTradeList] = useState([])
 
@@ -9,14 +9,15 @@ function TradeList() {
         .then((tradeList) => setTradeList(tradeList))
     }, [])
 
-
+// Uses a map to return the value of each key value pair in the json
     return (
         <div>
-            <ul>
+            <table>
                 {tradeList.map((trade, index) => (
-                    <li key={index}>{trade.ticker}</li>
+                    <li key={index}>{trade.id}{trade.ticker}{trade.side}{trade.entry_price}
+                    {trade.exit_price}{trade.contracts}{trade.notes}</li>
                 ))}
-            </ul>
+            </table>
         </div>
     )
 }
