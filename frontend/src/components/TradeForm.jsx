@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function TradeForm() {
+function TradeForm({ onTradeAdded }) {
     const [userData, setUserData] = useState({
         ticker: '',
         side: '',
@@ -22,6 +22,12 @@ function TradeForm() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(userData),
         })
+            .then(() => {                               // runs only AFTER Flask finishes saving
+                onTradeAdded()                          // call App's loadTrades -> App re-fetches -> list redraws
+                setUserData({                           // clear the form for the next trade
+                    ticker: '', side: '', entry_price: '', exit_price: '', contracts: '', notes: '',
+                })
+            })
     }
 
 return (
@@ -30,7 +36,8 @@ return (
             <input name="ticker" value={userData.ticker} onChange={handleChange} />
         </label>
         <label>Side
-            <select name="side" value={userData.side} onChange={handleChange}>
+            <select name="side" value={userData.side} onChange={handleChange} required>
+                <option value="" disabled>Select side</option>
                 <option value="long">Long</option>
                 <option value="short">Short</option>
             </select>
