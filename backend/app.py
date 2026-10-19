@@ -1,9 +1,24 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import models
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 CORS(app)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://kristianmoncada@localhost:5432/trading_journal"
+
+db = SQLAlchemy(app)
+
+class Trade(db.Model):
+        id = db.Column(db.Integer, primary_key=True)
+        ticker = db.Column(db.String)
+        side = db.Column(db.String)
+        entry_price = db.Column(db.Float)
+        exit_price = db.Column(db.Float)
+        contracts = db.Column(db.Integer)
+        notes = db.Column(db.String)
+
 
 @app.route('/')
 def home():
