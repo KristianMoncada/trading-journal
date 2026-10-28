@@ -11,13 +11,29 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://kristianmoncada@localhost:
 db = SQLAlchemy(app)
 
 class Trade(db.Model):
-        id = db.Column(db.Integer, primary_key=True)
-        ticker = db.Column(db.String)
-        side = db.Column(db.String)
-        entry_price = db.Column(db.Float)
-        exit_price = db.Column(db.Float)
-        contracts = db.Column(db.Integer)
-        notes = db.Column(db.String)
+    id = db.Column(db.Integer, primary_key=True)
+    ticker = db.Column(db.String)
+    side = db.Column(db.String)
+    entry_price = db.Column(db.Float)
+    exit_price = db.Column(db.Float)
+    contracts = db.Column(db.Integer)
+    notes = db.Column(db.String)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'ticker': self.ticker,
+            'side': self.side,
+            'entry_price': self.entry_price,
+            'exit_price': self.exit_price,
+            'contracts': self.contracts,
+            'notes': self.notes
+        }
+
+
+
+with app.app_context():
+    db.create_all()
 
 
 @app.route('/')
@@ -27,8 +43,12 @@ def home():
 # Route to list trades
 @app.route('/trades', methods = ['GET'])
 def list_trades():
-        trades = models.all_trades()
-        return jsonify(trades)
+    trades = db.session.execute(db.select(Trade)).scalars().all()
+    list_of_trades = []
+    for trade in trades:
+        real_trade = trade.to_dict()
+        list_of_trades.append(real_trade)
+    return jsonify(list_of_trades)
 
 # Route to create a trade
 @app.route('/trades', methods = ['POST'])
