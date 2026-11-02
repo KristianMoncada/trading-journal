@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import models
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -61,14 +60,16 @@ def create_trade():
             return jsonify({'error': f'{i} is required'}), 400
 
 
-    trade = models.add_trade(
-    data['ticker'],
-    data['side'],
-    data['entry_price'],
-    data['exit_price'],
-    data['contracts'],
-    data['notes'],
+    trade = Trade(
+        ticker=data['ticker'],
+        side=data['side'],
+        entry_price=data['entry_price'],
+        exit_price=data['exit_price'],
+        contracts=data['contracts'],
+        notes=data['notes'],
     )
+    db.session.add(trade)
+    db.session.commit()
     return jsonify(trade.to_dict()), 201
 
 # Route to update a trade
@@ -79,29 +80,34 @@ def trade_update(id):
     for i in required:
         if i not in data:
             return jsonify({'error': f'{i} is required'}), 400
+    trade = db.session.get(Trade, id)
 
-    trade = models.update_trade(
-        id,
-        data['ticker'],
-        data['side'],
-        data['entry_price'],
-        data['exit_price'],
-        data['contracts'],
-        data['notes'],
-    )
-    if trade:
-        return jsonify(trade.to_dict()), 200
-    else:
+    if trade is None:
         return jsonify({'error': f'Trade #{id} could not be found'}), 404
+    
+    trade.ticker=data['ticker']
+    trade.side=data['side']
+    trade.entry_price=data['entry_price']
+    trade.exit_price=data['exit_price']
+    trade.contracts=data['contracts']
+    trade.notes=data['notes']
+
+    db.session.commit()
+
+    return jsonify(trade.to_dict()), 200
      
 # Route to remove a trade
 @app.route('/trades/<int:id>', methods = ['DELETE'])
 def delete_trade(id):
-    trade = models.remove_trade(id)
-    if trade:
-        return jsonify(trade.to_dict()), 200
-    else:
+    trade = db.session.get(Trade, id)
+
+    if trade is None:
         return jsonify({'error': f'Trade #{id} could not be found'}), 404
+
+    db.session.delete(trade)
+    db.session.commit()
+
+    return jsonify(trade.to_dict()), 200
 
 
 if __name__ == '__main__':
