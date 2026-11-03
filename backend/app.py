@@ -137,6 +137,46 @@ def delete_trade(id):
 
     return jsonify(trade.to_dict()), 200
 
+# Calculate win rate
+def summarize(trades):
+    total = len(trades)
+    wins = 0
+    total_pnl = 0
+    for trade in trades:
+        pnl = trade.compute_pnl()
+        total_pnl += pnl
+        if pnl > 0:
+            wins += 1
+    win_pct = round(wins / total * 100, 2) if total else 0
+    return {'win_percentage': win_pct, 'total_trades': total, 'wins': wins, 'total_pnl': total_pnl}
+
+# All-time win rate
+@app.route('/stats/winrate')
+def winrate():
+    trades = db.session.execute(db.select(Trade)).scalars().all()
+    return jsonify(summarize(trades))
+
+# Win rate per ticker
+@app.route('/stats/ticker/<ticker>')
+def ticker_stats(ticker):
+    trades = db.session.execute(db.select(Trade)).scalars().all()
+    filtered = [t for t in trades if t.ticker.upper() == ticker.upper()]
+    result = summarize(filtered)
+    result['ticker'] = ticker.upper()
+    return jsonify(result)
+
+# Monthly stats with daily P&L
+@app.route('/stats/month/<int:year>/<int:month>')
+def month_stats(year, month):
+    trades = db.session.execute(db.select(Trade)).scalars().all()
+    filtered = [t for t in trades if t.date.year == year and t.date.month == month]
+    daily = {}
+    for t in filtered:
+        day = t.date.date().isoformat()
+        daily[day] = daily.get(day, 0) + t.compute_pnl()
+    result = summarize(filtered)
+    result['daily_pnl'] = daily
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run(debug=True)
