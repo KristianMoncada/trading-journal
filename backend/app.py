@@ -2,6 +2,9 @@ from flask import Flask, request, jsonify
 from datetime import datetime
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+import anthropic
+
+client = anthropic.Anthropic()
 
 app = Flask(__name__)
 CORS(app)
@@ -177,6 +180,30 @@ def month_stats(year, month):
     result = summarize(filtered)
     result['daily_pnl'] = daily
     return jsonify(result)
+
+# Ask the AI about your trades
+@app.route('/ask', methods=['POST'])
+def ask():
+    data = request.get_json()
+    question = data.get('question') if data else None
+    if not question:
+        return jsonify({'error': 'question is required'}), 400
+
+    trades = db.session.execute(db.select(Trade)).scalars().all()
+    trade_list = [t.to_dict() for t in trades]
+    stats = summarize(trades)
+
+    message = client.messages.create(
+        model='claude-sonnet-5-5',
+        max_tokens=1024,
+        system='You are a trading coach for a futures trader who trades NQ and ES. Answer using only the trade data provided. Be short and specific.',
+        messages=[{
+            'role': 'user',
+            'content': f'My stats: {stats}\nMy trades: {trade_list}\n\nQuestion: {question}'
+        }]
+    )
+    answer = ''.join(block.text for block in message.content if block.type == 'text')
+    return jsonify({'answer': answer})
 
 if __name__ == '__main__':
     app.run(debug=True)
